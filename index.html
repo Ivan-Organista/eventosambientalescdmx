@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Responsive Dynamic Calendar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin:0;
+            background: #f6f6fa url('https://github.com/Ivan-Organista/flyers/raw/main/background-eventos-y-convocatorias.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family:'Segoe UI',Arial,sans-serif;
+        }
+        .menu-bar {
+            position:sticky;
+            top:0;
+            width:100%;
+            background:#4b2e83;
+            color:#fff;
+            padding:15px 0;
+            text-align:center;
+            font-size:1.2rem;
+            z-index:1000;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        }
+        .menu-bar a {
+            color:#fff;
+            text-decoration:none;
+            margin:0 20px;
+            font-weight:bold;
+            transition:color 0.2s;
+        }
+        .menu-bar a:hover {
+            color:#ffd700;
+        }
+        .calendar-container {
+            max-width:420px;
+            width:95vw;
+            margin:80px auto 0 auto;
+            padding:20px 10px 30px 10px;
+        }
+        .calendar-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:10px;
+        }
+        .calendar-header button {
+            min-width:40px;
+            min-height:40px;
+            font-size:1.3rem;
+            background:#4b2e83;
+            color:#fff;
+            border:none;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .calendar-header button:hover {
+            background:#392060;
+        }
+        .calendar-header span {
+            font-size:1.2rem;
+            font-weight:bold;
+        }
+        .calendar-grid {
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            gap:5px;
+            text-align:center;
+            min-height:40px;
+        }
+        .calendar-day,.calendar-date {
+            font-size:1rem;
+            min-height:38px;
+            line-height:38px;
+            border-radius:6px;
+            cursor:pointer;
+            user-select:none;
+            transition:background 0.2s,color 0.2s;
+        }
+        .calendar-day {
+            font-weight:bold;
+            background:#f3f3f3;
+        }
+        .calendar-date.selected {
+            outline:2px solid #ffd700;
+            background:#ffe066;
+            color:#4b2e83;
+            font-weight:bold;
+        }
+        .calendar-date.has-event {
+            border-bottom:3px solid #4b2e83;
+        }
+        .calendar-date.today {
+            background:#4b2e83;
+            color:#fff;
+            border-radius:50%;
+        }
+        .calendar-date:active,.calendar-date:focus {
+            background:#e0d7f7;
+            color:#4b2e83;
+        }
+        .event-list {
+            opacity:0;
+            transform:translateY(20px);
+            transition:opacity 0.4s,transform 0.4s;
+            margin-top:25px;
+            background:#f8f8ff;
+            border-radius:8px;
+            padding:18px 20px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.06);
+            min-height:40px;
+            font-size:1rem;
+        }
+        .event-list.show {
+            opacity:1;
+            transform:translateY(0);
+        }
+        .event-list h3 {
+            margin-top:0;
+            font-size:1.1em;
+            color:#4b2e83;
+        }
+        .evento {
+            display:flex;
+            align-items:flex-start;
+            gap:16px;
+            background:#fff;
+            border-radius:12px;
+            box-shadow:0 2px 8px rgba(76,46,131,0.08);
+            padding:16px 18px;
+            margin-bottom:18px;
+            transition:box-shadow 0.2s;
+            position:relative;
+        }
+        .evento:hover {
+            box-shadow:0 4px 16px rgba(76,46,131,0.18);
+        }
+        .evento-img {
+            width:64px;
+            height:64px;
+            border-radius:8px;
+            object-fit:cover;
+            background:#eee;
+            flex-shrink:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:2.2rem;
+            color:#bbb;
+        }
+        .evento-content {
+            flex:1;
+        }
+        .evento-title {
+            font-size:1.1rem;
+            font-weight:bold;
+            color:#4b2e83;
+            margin-bottom:4px;
+        }
+        .evento-date {
+            font-size:0.98rem;
+            color:#888;
+            margin-bottom:2px;
+        }
+        .evento-desc {
+            margin:6px 0 4px 0;
+            color:#333;
+        }
+        .evento-duration {
+            font-size:0.97rem;
+            color:#4b2e83;
+            margin-bottom:2px;
+        }
+        .evento-link {
+            display:inline-block;
+            margin:4px 0 0 0;
+            color:#fff;
+            background:#4b2e83;
+            padding:4px 12px;
+            border-radius:6px;
+            text-decoration:none;
+            font-size:0.97rem;
+            transition:background 0.2s;
+        }
+        .evento-link:hover {
+            background:#392060;
+        }
+        .evento-details {
+            font-size:0.95rem;
+            color:#555;
+            margin-top:4px;
+        }
+        .evento-ubicacion {
+            font-size:0.97rem;
+            color:#2b2b2b;
+            margin-bottom:2px;
+        }
+        .evento-noimg {
+            width:64px;
+            height:64px;
+            border-radius:8px;
+            background:#eee;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:2.2rem;
+            color:#bbb;
+        }
+        @media (max-width:600px) {
+            .calendar-container {
+                margin-top:70px;
+                padding:10px 2vw 20px 2vw;
+                max-width:99vw;
+            }
+            .calendar-header span {
+                font-size:1rem;
+            }
+            .calendar-date,.calendar-day {
+                font-size:0.95rem;
+                min-height:32px;
+                line-height:32px;
+            }
+            .event-list {
+                font-size:0.98rem;
+                padding:12px 8px;
+            }
+            .menu-bar {
+                font-size:1rem;
+                padding:10px 0;
+            }
+            .menu-bar a {
+                margin:0 10px;
+            }
+        }
+        @media (max-width:400px) {
+            .calendar-header span {
+                font-size:0.9rem;
+            }
+            .calendar-date,.calendar-day {
+                font-size:0.85rem;
+                min-height:26px;
+                line-height:26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="menu-bar">
+        <a href="#" id="inicioBtn">Inicio</a>
+        <a href="#" id="calendarioBtn">Calendario</a>
+        <a href="#" id="eventosBtn">Eventos</a>
+        <a href="#" id="climaBtn">Reloj climático</a>
+        <a href="#" id="contactoBtn">Contacto</a>
+    </nav>
+    <div id="inicio-section" class="section">
+        <h2>Te doy la bienvenida a este rincón de Internet</h2>
+        <p>No hay soluciones individuales para problemas colectivos.</p>
+        <h3 style="margin-top:2em;">Convocatorias</h3>
+        <div id="convocatorias-list"></div>
+    </div>
+    <div class="calendar-container section" style="display:none;">
+        <div class="calendar-header">
+            <button id="prevMonth" aria-label="Mes anterior">&lt;</button>
+            <span id="monthYear"></span>
+            <button id="nextMonth" aria-label="Mes siguiente">&gt;</button>
+        </div>
+        <div class="calendar-grid" id="calendarDays"></div>
+        <div class="calendar-grid" id="calendarDates"></div>
+        <div id="eventList" class="event-list"></div>
+    </div>
+    <div id="eventos-section" class="section" style="display:none;max-width:600px;width:95vw;margin:40px auto 0 auto;padding:30px 10px 30px 10px;">
+        <h2>Todos los eventos</h2>
+        <div id="allEventsList"></div>
+    </div>
+    <!-- Contacto Section (add if not present) -->
+    <div id="contacto-section" class="section" style="display:none;max-width:600px;width:95vw;margin:40px auto 0 auto;padding:30px 10px 30px 10px;text-align:center;">
+        <h2>Contacto</h2>
+        <h3>Contáctanos: <a href="mailto:apishimarisu@outlook.com">apishimarisu@outlook.com</a></h3>
+    </div>
+    <!-- Reloj Climático Section -->
+    <div id="clima-section" class="section" style="display:none;max-width:600px;width:95vw;margin:40px auto 0 auto;padding:30px 10px 30px 10px;text-align:center;">
+        <h2>Reloj Climático</h2>
+        <div id="climate-clock-footer" style="padding:40px 0 30px 0;">
+            <climate-clock></climate-clock>
+        </div>
+    </div>
+    <!-- Footer: Only the social media bar -->
+    <footer id="social-bar" style="background:transparent;padding:0;margin-top:40px;">
+        <div style="max-width:600px;margin:0 auto;text-align:center;">
+            <div id="social-icons-bar" style="margin-top:18px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;">
+                <a href="https://instagram.com/" target="_blank" title="Instagram"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram" style="width:32px;height:32px;"></a>
+                <a href="https://facebook.com/" target="_blank" title="Facebook"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" style="width:32px;height:32px;"></a>
+                <a href="https://youtube.com/" target="_blank" title="YouTube"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube" style="width:32px;height:32px;"></a>
+                <a href="https://twitch.tv/" target="_blank" title="Twitch"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitch.svg" alt="Twitch" style="width:32px;height:32px;"></a>
+                <a href="https://x.com/" target="_blank" title="X"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/x.svg" alt="X" style="width:32px;height:32px;"></a>
+                <a href="https://tiktok.com/" target="_blank" title="TikTok"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok" style="width:32px;height:32px;"></a>
+                <a href="https://github.com/" target="_blank" title="GitHub"><img class="social-anim" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub" style="width:32px;height:32px;"></a>
+            </div>
+        </div>
+    </footer>
+    <!-- Modal for links -->
+    <div id="modal-link" style="display:none;position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:28px 22px 18px 22px;border-radius:12px;max-width:95vw;width:340px;box-shadow:0 4px 24px rgba(0,0,0,0.18);position:relative;">
+            <button id="close-modal-link" style="position:absolute;top:8px;right:12px;font-size:1.3em;background:none;border:none;cursor:pointer;">&times;</button>
+            <div id="modal-link-message" style="margin-bottom:18px;"></div>
+            <a id="modal-link-btn" href="#" target="_blank" style="display:inline-block;background:#4b2e83;color:#fff;padding:7px 18px;border-radius:6px;text-decoration:none;font-weight:bold;margin-bottom:10px;">Ir al enlace</a>
+            <div id="modal-link-extra" style="margin-top:10px;font-size:0.97em;color:#444;"></div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Data: EVENTS and CONVOCATORIAS ---
+        // Edit/add events here! {image: null,date: "",title: "",description: "",duration: "",ubicacion: "",link: {url: "",msg: "",extra: ""},details: ""}
+        const EVENTS = [
+            {
+                image: null,
+                date: "2025-08-08",
+                title: "Pueblos y Barrios Originarios: Construyendo el primer plan de acción climática de la alcaldía Iztapalapa",
+                description: "✨🌿 Si perteneces o te identificas como parte de un Pueblo y/o Barrio Originario de Iztapalapa, se les invita al Segundo Taller Participativo del Primer Plan de Acción Climática de Iztapalapa, que se llevará a cabo el viernes 8 de agosto a las 10 de la mañana, en el Museo de las Culturas pasión Por iztapalapa \n 👉Será un espacio muy importante para recabar opiniones, propuestas y aportaciones de las y los habitantes de Iztapalapa sobre los efectos del Cambio Climático en la demarcación y se plasmaran en el Primer Plan de Acción Climática.",
+                duration: "4 horas (10:00 - 14:00)",
+                ubicacion: "Ermita Iztapalapa 100, San Pablo, Iztapalapa, 09000, Ciudad de México. ",
+                link: {
+                    url: "https://maps.app.goo.gl/rf3XQJ55K6CabLwt8?g_st=ipc",
+                    msg: "Si conocen a más personas de Iztapalapa que puedan estar interesadas en asistir, no dudes en invitarles.",
+                    extra: "¡Nos encantaría contar con su participación!"
+                },
+                details: "Evento presencial. Recuerda: Tu voz es lo más importante"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/evento-ven-a-pajarear.jfif",
+                date: "2025-08-10",
+                title: "Taller de introducción a la identificación de las aves",
+                description: "Acompáñanos en este conjunto de actividades que reforzarán tus conocimientos y habilidades de observación de aves. Además podrás poner en práctica tu destreza artistica en la elaboración de nuestro Fanzine sobre 'Las aves residentes de los humedales'. Para nuestro taller no es necesario tener experiencia. <b>Si necesitas préstamo de binoculares, no olvides comentarlo en el momento de tu registro para considerar el préstamo 🦉💙.</b>",
+                duration: "2.5 horas (7:30 - 10:00)",
+                ubicacion: "Parque Ecológico Xochimilco, CDMX.",
+                link: {
+                    url: "https://www.facebook.com/profile.php?id=61563900740976",
+                    msg: "Organizado por Tilmaturas Birding Infusión Científica. Link a su página de Facebook. IG: @tilmaturasbirding infusion_cientifica",
+                    extra: "Tu presencia hace la diferencia 🌱"
+                },
+                details: "⚠️CUPO LIMITADO ⚠️Actividad +13 años. Para más información: 55 2243 8431"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/evento-jornada-de-reforestacion-en-Zumpango.jfif",
+                date: "2025-08-23",
+                title: "Jornada de reforestación en Zumpango",
+                description: "🌳 Extendemos la invitación a nuestra siguiente faena comunitaria en San Juan Ziltlaltepec, Zumpango.<b>Contaremos con transporte redondo desde Huerto Roma Verde</b>. Agradecemos el apoyo al Comisariado Ejidal de San Juan Zitlaltepec, la red CONSIGUE y especialmente a Rodolfo y Rotarac San Rafael por permitirnos compartir esta faena. 💥Cuota de recuperación: $100 ✨.",
+                duration: "7 horas (07:00 - 14:00)",
+                ubicacion: "Huerto Roma Verde, Calle Jalapa 234, Roma Sur, 06760 Ciudad de México, CDMX. https://maps.app.goo.gl/BHHTunzgbueD8DCS8",
+                link: {
+                    url: "https://www.eventbrite.com.mx/e/jornada-de-reforestacion-en-san-juan-zitlaltepec-zumpango-tickets-1531177014669",
+                    msg: "Reforestación organizada por Manos a la Tierra México.",
+                    extra: "La cuota de recuperación es para cubrir parte del costo de los dos transportes que usaremos en la faena y es de gran ayuda para seguir manteniendo lo más accesible posible nuestras jornadas."
+                },
+                details: "Registro indispensable: Todos los detalles se encuentran en el enlace de registro. IMPORTANTE: La comunidad nos ofrecerá alimentos, así que <b> te pedimos que lleves tu plato, vaso y cubiertos</b> para evitar el uso de desechables. ¡Nos vemos!"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/evento-calidad-del-agua-y-saneamiento-en-mexico.jfif",
+                date: "2025-08-20",
+                title: "Calidad del agua y saneamiento en México",
+                description: "Prosig-csh y el seminario permanente Agua y cultura invitan al ciclo de conversatorios Convergencias en el siglo XXI. Modera Daniel Murillo Licea, CIESAS-CDMX. Con la participación de: Astrid Schilmann Halbinger, Instituto Nacional de Salud Pública en México; Juan Manuel Ledón Roig, Inventario Nacional de Calidad del Agua; Roberto Romero Pérez, Instituto Mexicano de Tecnología del Agua.",
+                duration: "2 horas (10:30 - 12:30)",
+                ubicacion: "Auditorio Arturo Waman. Casa Chata, Hidalgo y Mariano Matamoros S/N, Col. Tlalpan Centro, Alcaldía Tlalpan, C.P. 14000, Ciudad de México.",
+                link: {
+                    url: "https://youtube.com/@prosig-csh",
+                    msg: "Este evento es presencial y también se transmitirá en vivo a través del siguiente canal de YouTube.",
+                    extra: ""
+                },
+                details: "También se transmitirá en línea."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/evento-tu-causa-mi-causa-3era-edicion.jfif",
+                date: "2025-08-07",
+                title: "Tu Causa, mi causa Edición de Agua",
+                description: "Se presentarán: 💧 CERSHI UNESCO: Jorge Arriaga  - 💧 Fondo Procuenca: Regina Cornish  - 💧 Agua Org: Karina Bautista -🌟 Presentaciones especiales: 🌟  *Corazón Capital: Carlos Flores  *Ciclo del Agua: Talia Martínez y Juan Manuel Ledón.",
+                duration: "1 hora (19:00 - 20:00)",
+                ubicacion: "Pulquería Insurgentes",
+                link: {
+                    url: "https://maps.app.goo.gl/Q1inK4rekGPGVS4VA",
+                    msg: "El cupo es limitado, reserva tu lugar en el siguiente enlace.",
+                    extra: "Por @meshico_org 'Casa productora de Cambio social'."
+                },
+                details: "La entrada es libre, pero ¡El cupo es limitado!."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/evento-mercado-de-trueque-iztapalapa.jfif",
+                date: "2025-08-10",
+                title: "Mercado de trueque",
+                description: "¡Te invitamos a participar en el Mercado de Trueque! Un espacio para el intercambio de bienes y servicios entre la comunidad.",
+                duration: "5 horas (8:00 - 13:00)",
+                ubicacion: "Alcaldía Iztapalapa, Macroplaza, CDMX.",
+                link: {
+                    url: "https://www.sedema.cdmx.gob.mx/comunicacion/nota/invita-sedema-nuevo-mercado-de-trueque-en-macroplaza-de-la-alcaldia-iztapalapa",
+                    msg: "Organizado por la Secretaría del medio ambiente.",
+                    extra: ""
+                },
+                details: "La recepción de textiles está suspendida hasta nuevo aviso"
+            },
+            {
+                image:"https://github.com/Ivan-Organista/flyers/raw/main/evento-libro-en-accion-historias-conmovedoras-de-agencia-de-cambio.jfif",
+                date: "2025-09-04",
+                title: "Presentación del libro 'EN ACCIÓN: Historias conmovedoras de agencia de cambio'",
+                description: "Este libro surge de las redes de Ashoka en colaboración con aliados comprometidos con la transformación social. A través de sus páginas, conocerás historias que inspiran, movilizan y reafirman que todas las personas —sin importar su edad— pueden ser agentes de cambio. Es una recopilación de relatos reales que visibilizan el poder transformador de los adolescentes, jóvenes y emprendedores sociales que están contribuyendo de manera positiva en sus realidades.",
+                duration: "1.5 horas (12:30 - 14:00)",
+                ubicacion: "La Nana, Laboratorio Urbano de Arte Comprometido (LUAC) en la Ciudad de México. <b>Habrá transmisión en vivo</b>",
+                link: {
+                    url: "https://forms.office.com/r/d7JU6hUbaE",
+                    msg: "Regístrate y comparte la invitación con tus redes:",
+                    extra: "Esperamos verles pronto. ¡Abrazos!"
+                },
+                details: "Organizan: La Nana, ConArte, Naranja Central y Ashoka, con el apoyo de Fundación MetLife."
+            },
+            {
+                image:null,
+                date: "2025-08-10",
+                title: "Reforesta una chinampa 🌳",
+                description: "📣 Ayuda al ajolote y a su hábitat. Restaura una chinampa en Xochimilco. Entre las actividades están: 🐠Visita al ajolotario 🦠Plática con biólogx especialista 🧘‍♀️Ejercicios de integración  y reconexión con la naturaleza 🌳Reforestación en humedales 🥪 Convivencia y comida ",
+                duration: "6.25 horas (8:45 - 15:00)",
+                ubicacion: "La Santísima, Xochimilco",
+                link: {
+                    url: "https://linktr.ee/cambiocolectivo",
+                    msg: "📍Punto de encuentro en la catedral de San Bernardino a las 8:40 hrs. Aparta tu lugar en el siguiente enlace↓↓",
+                    extra: "La cuota de recuperación ayuda a cubrir los gastos de la actividad, insumos, el ingreso y donación  al ajolotario; brinda apoyo para el mantenimiento diario de la zona y ayuda a la comunidad local y a Tlacuache Chinampero"
+                },
+                details: "Cuota de recuperación: $420 MXN por persona. Únete a proteger la naturaleza, únete al camBIO. Organiza @cambiocolectivomx"
+            },
+            {
+                image:"https://github.com/Ivan-Organista/flyers/blob/main/evento-voluntariado-para-plantacion-aromaticas-PEX.jfif?raw=true",
+                date: "2025-08-09",
+                title: "Taller Modelo de negocio para negocios agrícolas",
+                description: "Cursos GRATUITO este sábado invita colectivo Horti Sativa,  realiza tu registro para apartar tu lugar. MODELO DE NEGOCIO PARA NEGOCIOS AGRÍCOLAS. Identificarás los aspectos fundamentales para poder llevar a cabo y sostener a largo plazo cualquier negocio ya sea en el campo de la agricultura o cualquier área.",
+                duration: "1.5 horas (10:00 - 11:30)",
+                ubicacion: "Parque Ecológico de Xochimilco, Anillo Perif. 1, Col. Ciénega Grande, Xochimilco, 16036, CDMX.",
+                link: {
+                    url: "https://forms.gle/USQLMzQiCuyo5prG7",
+                    msg: "Cierre de inscripciones: 7 de agosto.",
+                    extra: "Invita Colectivo @hortisativa Para más información, contacta a la Bióloga Lesly Méndez +52 5527654361"
+                },
+                details: "Gratuito con cupo limitado. Incluye constancia de participación"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-voluntariado-para-plantacion-aromaticas-PEX.jfif?raw=true",
+                date: "2025-08-09",
+                title: "Voluntariado para plantación aromáticas en PEX.",
+                description: "En esta jornada de plantación de diversas , como parte de los trabajos de mejoramiento del suelo y su activación de la chinampa, tenemos las capacitaciones de nuestra escuela chinampera \"Cultivando Conciencia\" con el primer ciclo de cultivos como parte del proyecto de Conservación y manejo sustentable que se desarrolla en el PEX, entre la SEDEMA (Secretaria del Medio Ambiente) y WWF (World Wildlife Fund). La idea es que nos apoyen con la siembra de plantas  aromáticas y medicinales y se realizará una pequeña platica para que los asistentes conozcan el trabajo que se lleva a cargo de la Biol. Angélica Antonio del equipo de WWF.",
+                duration: "1.5 horas (11:30 - 13:00)",
+                ubicacion: "PARQUE ECOLOGICO XOCHIMILCO en Anillo Perif. 1, Col. Ciénega Grande, Xochimilco, 16036, CDMX.",
+                link: {
+                    url: "https://forms.gle/ATkdVkayaSamhvob6",
+                    msg: "Por favor, les pedimos a quienes les interese participar REGISTRE SU ASISTENCIA. El registro cierra el viernes 8 de agosto",
+                    extra: "En el sitio ya se contará con la planta🍃🍀 y herramienta para la actividad, se otorgarán algunos obsequios a los asistentes."
+                },
+                details: "Más información para registro con la Bióloga Lesly Méndez +52 5527654361 @hortisativa"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-saberes-de-la-tierra-entre-hongos-y-pulque.jfif?raw=true",
+                date: "2025-08-23",
+                title: "Saberes de la Tierra: Entre hongos y pulque",
+                description: "✨🍄 Hay saberes que no están en los libros… sino en el bosque, en la tierra húmeda, en la charla con quienes viven en conexión con ella. Te invitamos a una experiencia para caminar con otros ojos, escuchar con el corazón y saborear lo que nace del suelo: hongos, pulque, historias y comunidad. 🌿",
+                duration: "13.5 horas (7:00 - 20:30)",
+                ubicacion: "Jiquipilco, Estado de México",
+                link: {
+                    url: "https://www.facebook.com/events/2174215982988071?acontext=%7B%22event_action_history%22%3A[%7B%22mechanism%22%3A%22attachment%22%2C%22surface%22%3A%22newsfeed%22%7D]%2C%22ref_notif_type%22%3Anull%7D",
+                    msg: "Para más información o para apartar lugar contacta a 'Alas en los pies'",
+                    extra: "💚 Con cariño, desde Alas en los Pies y Ayototl A.C."
+            },details: ""
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-picnic-vegano-cdmx.jfif?raw=true",
+                date: "2025-08-10",
+                title: "Picnic vegano CDMX",
+                description: "Ven a convivir, compartir y conocer más sobre el veganismo y a otras personas veganas.",
+                duration: "2 horas (12:00 - 14:00)",
+                ubicacion: "Parque Hundido",
+                link: {
+                    url: "https://www.instagram.com/picnic.vegano.cdmx/",
+                    msg: "Para más información visita la página de instagram @picnic.vegano.cdmx",
+                    extra: ""
+                },
+                details: "@picnic.vegano.cdmx"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-mega-marcha-mexico-por-gaza.jfif?raw=true",
+                date: "2025-08-17",
+                title: "Mega marcha México Por Gaza. Contingente antiespecista x Palestina",
+                description: "El ejército Israel utiliza el 'veganismo' como herramienta para tratar de limpiar su imagen y justificar el genocidio que es está llevando a cabo contra el pueblo palestino.",
+                duration: "2 horas (14:30 - 16:30)",
+                ubicacion: "Glorieta de Insurgentes, CDMX",
+                link: {
+                    url: "",
+                    msg: "",
+                    extra: ""
+                },
+                details: "Contra el especismo, contra el racismo y contra el genocidio. ¡Rompamos relaciones y alcemos la voz! <span>&#x1F1F5;&#x1F1F8;</span> ✊🏽✊🏾✊🏿"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-taller-veganismo.jfif?raw=true",
+                date: "2025-08-08",
+                title: "Taller: Veganismo y confusión. Cómo el veganismo despolitizado utiliza el disfraz de la neutralidad como privilegio",
+                description: "Hoy las desigualdades de clase son más extremas que nunca. El problema de la liberación animal ( así como la humana) no se puede combatir con solo la mera declaración de 'principios morales'. Se requiere la abolicion real de la explotacion. El veganismo despolitizado no comprende el problema de sociedad de clases. Es en la forma en que se organiza la sociedad humana donde debemos explicar el origen del especismo. Te invitamos a un taller a comprender el origen del especismo,un análisis historico y por qué el antiespecismo politico es necesario.",
+                duration: "1 hora (17:00 - 18:00)",
+                ubicacion: "En línea",
+                link: {
+                    url: "https://www.instagram.com/p/DM5eSMiOsC_/",
+                    msg: "Para participar envía mensaje a @circuloestudioantiespecista",
+                    extra: "Es liberal pensar que el consumo cambia las condiciones de producción..."
+                },
+                details: "Síguelos en su canal de YouTube: Círculo de estudio antiespecista o en su IG: @mariel_vila"
+            },
+            {
+                image: null,
+                date: "2025-08-08",
+                title: "Viernes de activismo con @digusion.v_cdmx",
+                description: "Dejemos mensajes antiespecistas en las calles de CDMX",
+                duration: "1 hora (16:30 - 17:30)",
+                ubicacion: "Tlatelolco",
+                link: {
+                    url: "https://www.instagram.com/p/DNA5_RSMFEn/",
+                    msg: "Visita la página de Instagram @liberacionanimalmx",
+                    extra: "#LiberaciónAnimal"
+                },
+                details: "#VidaDignaParaTodasLasEspecies"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-trueque-textil.jpg?raw=true",
+                date: "2025-08-16",
+                title: "Trueque textil (Intercambia, dona, sólo llévate cosas y/o convive)",
+                description: "Hagamos la revolución creativa y resistamos en este metamodo de producción capitalista que nos quiere solo produciendo y consumiendo. Organiza @lia_nale 'Dona cualquier material textil que no utilices, TOMA LO QUE TE SUME.'",
+                duration: "7 horas (11:00 - 19:00)",
+                ubicacion: "'Estudio Lía Nalé', Artículo 123 #125 Col. Juárez Centro, Cuauhtémoc, CDMX",
+                link: {
+                    url: "https://www.instagram.com/p/DMq_5nnxO5f/",
+                    msg: "Para más información visite la página de IG en el sig. enlace ↓↓",
+                    extra: "Habrá cafecito, té, agua, papitas y galletas y pueden llevar cualquier otra cosa para compartir y convivir :-)"
+                },
+                details: "Entrada gratuita"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-reciclatron-agosto.jpg?raw=true",
+                date: "2025-08-08",
+                title: "Reciclatrón Agosto 2025",
+                description: "Jornada de acopio de residuos electrónicos y eléctricos",
+                duration: "7 horas (9:00 - 16:00)",
+                ubicacion: "Centro de Tlalpan, explanda de la alcaldía",
+                link: {
+                    url: "https://www.instagram.com/p/DMtR1ZRuWX9/",
+                    msg: "Más información de qué reisudos eléctricos y electrónicos reciben y cuáles no en el siguiente enlace de IG ↓↓",
+                    extra: "Es momento de darle un destino responsable a tus residuos eléctricos y electrónicos"
+                },
+                details: "Evento gratuito. No se requiere registro para asistir al evento."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-reciclatron-agosto.jpg?raw=true",
+                date:"2025-08-09",
+                title: "Reciclatrón Agosto 2025",
+                description: "Jornada de acopio de residuos electrónicos y eléctricos",
+                duration: "7 horas (9:00 - 16:00)",
+                ubicacion: "Centro de Tlalpan, explanda de la alcaldía",
+                link: {
+                    url: "https://www.instagram.com/p/DMtR1ZRuWX9/",
+                    msg: "Más información de qué reisudos eléctricos y electrónicos reciben y cuáles no en el siguiente enlace de IG ↓↓",
+                    extra: "Es momento de darle un destino responsable a tus residuos eléctricos y electrónicos"
+                },
+                details: "Evento gratuito. No se requiere registro para asistir al evento."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-megareforestacion-en-el-tetla.jpg?raw=true",
+                date: "2025-08-09",
+                title: "Reforestación Tetlalmanche, Tláhuac",
+                description: "Jornada de Reforestación en el área de cerril de San Fco. Tlaltenco, en el volcán Tetlalmanche, Tláhuac.",
+                duration: "6 horas (8:00 - 14:00)",
+                ubicacion: "Divino Maestro (La bomba)",
+                link: {
+                    url: "https://www.instagram.com/p/DMhCSi4sXTT/?img_index=1",
+                    msg: "🎒✨¿Qué puedo llevar? •ASADÓN (para acondicionar y limpiar bien el terreno) •PICO (para abrir la cepa en el suelo) •PALA •GORRA O SOMBRERO •ROPA CÓMODA •GUANTES •BOLSAS PARA BASURA •CUBETA O COSTAL (para transportar abono ó composta) •AGUA O SUERO •SNACK (Semillas o frutos secos) •Y RECUERDA SUMAR A MÁS PERSONAS.",
+                    extra: "Más información en el enlace de IG ↑↑"
+                },
+                details: "Únete a esta acción por la vida, ⛰️❤️‍🔥El Tetlalman nos necesita. El registro se hace el mismo día que el evento."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-tequios-por-la-restauracion.jpg?raw=true",
+                date: "2025-08-09",
+                title: "Tequio por la Restauración de Chapultepec",
+                description: "Únete a la limpieza en la Barranca de Barrilaco. Contarán también con una capacitación en el uso de herramientas para trabajos de restauración en parques urbanos.",
+                duration: "3 horas (9:00 - 12:00)",
+                ubicacion: "Tercera sección del Bosque de Chapultepec, CDMX",
+                link: {
+                    url: "https://forms.office.com/pages/responsepage.aspx?id=NIyw6trRHE-ZFmWePD-UvaFCpfrC6bVDrIc9L4-oYBdUM1Y4NTlEV09TMUJGOEdDTFRROUQzTFFEUi4u&route=shorturl",
+                    msg: "Una vez que realice su registro se le compartirán los detalles para tu participación",
+                    extra: ""
+                },
+                details: "Acitivdad gratutia. Se requiere registro previo."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-act-ecologica-xochimilco-vivo.jpg?raw=true",
+                date: "2025-08-30",
+                title: "Actividad ecológica por un Xochimilco vivo",
+                description: "¿Qué incluye tu vista? -Entrada al refugio del ajolote, -Alimentos y agua, -Actividades y recorrido. <b>Cuota de recuperación $750</b> 🐾 Conservación, biodiversidad, agricultura y tradición… Todo en un solo día.",
+                duration: "8.5 horas (8:30 - 17:00)",
+                ubicacion: "Embarcadero de Cuemanco, Xochimilco, CDMX.",
+                link: {
+                    url: "https://forms.gle/MAWA6Pu5UQtMzv3NA",
+                    msg: "Para reservar tu lugar, por favor llena el siguiente formulario:",
+                    extra: "Más información en la página de IG @defensambiental"
+                },
+                details: "Vive, aprende, saborea y apoya a Xochimilco. Participar es apoyar la cultura, el medio ambiente y el futuro de una región clave para la biodiversidad de México 🐾"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-jornada-de-deshierbe-pedregal-1.jpg?raw=true",
+                date: "2025-08-09",
+                title: "Jornada de deshierbe Geopedregal",
+                description: "El Geopedregal los invita a participar en esta primer jornada de deshierbe del semestre 🌱",
+                duration: "3 horas (9:00 - 12:00)",
+                ubicacion: "Entre Institutos de Geografía y Geología",
+                link: {url: "https://www.instagram.com/p/DM8GHRpOHhD/",msg: "Más información en la publicación de IG de @geopedregal ↓↓",extra: "Trae a tus cuates y ayuda a conservar tan hermoso este increíble remanente de pedregal."},
+                details: "Recuerda traer ropa cómoda, pañoleta o cubrebocas, botella de agua y protector solar. ¡Nos vemos!"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-picnic-tlahuac.jpg?raw=true",
+                date: "2025-08-24",
+                title: "Picnic Tláhuac",
+                description: "¿Te interesa el veganismo o resides en Tláhuac y quieres conocer más gente de la comunidad? Únete al picnic en el Bosque de Tláhuac. Sólo se requiere llevar un guiso apto para veganxs para compartir y la mejor actitud para compartir un momento ameno :D",
+                duration: "2 horas (11:00 - 13:00)",
+                ubicacion: "Bosque de Tláhuac",
+                link: {url: "https://www.instagram.com/p/DM_zT8XNcW5/",msg: "Para más información puede enviar mensaje a @veganxsdescentralizadxs @vegan_87 y/o @elvego.mx",extra: ""},details: ""
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-reforestacion-los-amigos-del-arbol.jpg?raw=true",
+                date: "2025-08-16",
+                title: "Cierre de la campaña de Regorestación 'Los amigos del árbol'",
+                description: "Evento familiar para celebrar el cierre de la campaña de reforestación 'Los amigos del árbol'",
+                duration: "3.5 horas (8:30 - 12:00)",
+                ubicacion: "Pilares 'Joya de las Nieves', Nísperos, Zona de conservación ecológica",
+                link: {url: "https://maps.app.goo.gl/qpQTpuSog6nxCLPFA",msg: "Mientras más manos, más apoyo, más comunidad y menos trabajo para todos.",extra: ""},
+                details: "Recomendaciones: botella de agua, ropa cómoda y gorra, comida para compartir, llevarnos todos nuestros residuos al terminar la actividad y la mejor actitud!"
+        }
+        ];
+        // Edit/add events here! ,{image: null,date: "",title: "",description: "",duration: "",ubicacion: "",link: {url: "",msg: "",extra: ""},details: ""}
+        // Edit/add convocatorias here! {image: null,title: "",description: "",ubicacion: "",link: {url: "",msg: "",extra: ""},cierre: "",details: ""}
+        const CONVOCATORIAS = [
+            {
+                image: null,
+                title: "URGENTE: ¡Suma tu firma!",
+                description: "Exigimos al Estado Mexicano una postura inmediata, firme y contundente: el fin del genocidio por hambre en Gaza, un alto al fuego permanente, y el acceso urgente y sin obstáculos de alimentos suficientes y servicios de salud como parte de la ayuda humanitaria.",
+                ubicacion: "En línea",
+                link: {
+                    url: "https://forms.gle/XLMavqFGaA78KyBM6",
+                    msg: "Firma a título personal, como organización, colectiva, comunidad, etc.",
+                    extra: "Atentamente, las organizaciones de la sociedad civil convocantes:\n Alianza por la Salud Alimentaria,\n Campaña Nacional Sin Maíz No Hay País,\n El Poder del Consumidor,\n Instituto de Estudios para el Desarrollo Rural Maya, Circo Maya"
+                },
+                cierre: "2025-12-31",
+                description: "Unámonos para apoyar que todos los animales en México estén legalmente protegidos con esta primera #LeyGeneralDeProtecciónAnimal.",
+                ubicacion: "En línea",
+                link: {
+                    url: "https://igualdadanimal.mx/campana/leyes-para-los-animales/por-la-primera-ley-general-de-proteccion-animal/",
+                    msg: "Firma en el siguiente enlace :-)",
+                    extra: ""
+                },
+                cierre: "2025-12-31",
+                details: ""
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/Conv-POZMVN.jfif",
+                title: "Programa de Ordenación de la Zona Metropolitana del Valle de México",
+                description: "¿Conoces áreas de conflicto socioambiental en CDMX y EdoMex? Aprovecha esta consulta y señala las bodegas, edificios, y construcciones privadas que están provocando estrés socioambiental. Registra los problemas que enfrentas, los servicios que usas y los proyectos que podrían mejorar la vida en la metrópoli, por @sedatu_mx.",
+                ubicacion: "Formulario en línea",
+                link: {
+                    url: "https://docs.google.com/forms/d/e/1FAIpQLSco9BImBxAooHHsYE7-5Cd9tbAiBunckRcJ_VWJF-f_-nPVGQ/viewform",
+                    msg: "¡Llénalo antes de que lo cierren!",
+                    extra: "Tu voz es importante."
+                },
+                cierre: "2025-09-30",
+                details: "En 10 minutos, comparte cómo vives la Zona Metropolitana del Valle de México. Tus respuestas anónimas ayudarán a construir el Programa de Ordenación de la Zona Metropolitana del Valle de México y definir mejores soluciones de ordenamiento, movilidad, servicios y medio ambiente para todas y todos."
+            },
+            {
+                image: null,
+                title: "Encuesta sobre participación ciudadana juvenil",
+                description: "Es para tener más información de la organización de los eventos de RED EVOLUCIÓN AMBIENTAL en coordinación con la Red Mundial de Jóvenes Políticos CDMX",
+                ubicación: "Formulario en línea",
+                link: {
+                    url: "https://docs.google.com/forms/d/e/1FAIpQLSc5ruN-OgM150-oAx_L7a8QRBotvLKw77NRiK5AfwvlCpoTdA/viewform?usp=header",
+                    msg: "¡Tu opinión ayuda mucho! llénalo antes de que lo cierren.",
+                    extra: "Ayúdanos a mejorar la participación juvenil en temas ambientales."
+                },
+                cierre: "2025-10-31",
+                details: "Medio de contacto: redevolucionambiental@gmail.com Además, puedes seguirlos en sus redes sociales. @red_evolucion_ambiental "
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/conv-juventudes-autodigestivas-para-la-transformacion.jpg?raw=true",
+                title: "Juventudes autodigestivas para la transformación (Colectividades - injuve)",
+                description: "¿Tienes un proyecto que puede transformar tu comunidad? ¡Esta es tu oportunidad!👀 Si tienes entre 15 y 29 años y formas parte de un colectivo en la Ciudad de México, súmense al programa Juventudes Autogestivas para la Transformación. 👾📌 ¿Qué necesitan? • Ser al menos 5 personas jóvenes • Vivir en la Ciudad de México • Presentar un Proyecto Comunitario de Transformación Social 💰 ¿Qué obtienen? • Impulso económico de hasta $25,000 por proyecto • Participación en festivales, encuentros, talleres y más • Certificación gratuita y acompañamiento para fortalecer su organización.",
+                ubicación: "Sedes en las 16 alcaldías de la CDMX",
+                link: {
+                    url: "https://www.injuve.cdmx.gob.mx/",
+                    msg: "Toda la información del programa social se encuentra en el siguiente enlace ↓↓",
+                    extra: "¡Formen parte de una red solidaria de juventudes que está transformando la ciudad! ✨#JóvenesTransformando"
+                },
+                cierre: "2025-08-09",
+                details: "El registro cierra a las 16:00 horas el sábado 9/Ago. Puedes inscribirte de manera presencial de lunes a viernes, en un horario de 10 a 16 horas, en la sede del Injuve: Calzada México-Tacuba 235, 'Un Hogar Para Nosotros', Miguel Hidalgo, 11330, CDMX, en el 2do piso del edificio."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/raw/main/conv-climaton.jfif",
+                title: "Climatón UNAM 2025: Jóvenes en acción ante la emergencia climática",
+                description: "📢 Concurso nacional para jóvenes de 16 a 26 años con ideas frente al cambio climático. Ejes temáticos 🌿: agua, islas de calor, suelos y alimentos, movilidad, energía, residuos, desplazamientos forzados. Equipos de 3 a 5 personas. 🏆 Premios: – 2 premios de $25,000 (categoría 16-19 años) – 2 premios de $35,000 (categoría 20-26 años) – Premio del público: $5,000",
+                ubicación: "Registro en línea | Para toda la República Mexicana",
+                link: {
+                    url: "https://www.climaton.unam.mx/",
+                    msg: "Toda la información en el siguiente enlace ↓↓",
+                    extra: "Actividades del 25 de agosto al 29 de septiembre del 2025."
+                },
+                cierre: "2025-08-17",
+                details: "¡Participa y se parte del cambio desde tu comunidad! 🌎💪🏼"
+            },
+            {
+                image: null, 
+                title: "Salvemos las jacarandas centenarias de la del Carmen, Coyoacán. Firma la petición.", 
+                description: "¿Nos apoyas compartiendo y firmando esta petición?",
+                ubicacion: "En línea",
+                link: {
+                    url: "https://chng.it/BD2snCrTBv",
+                    msg: "",
+                    extra: "¡Únete a nosotros en esta lucha!"
+                },
+                cierre: "2025-09-30",
+                details: "Estas '4 diosas jacarandas' fueron parte del diseño de la casa construida por el maestro José Clemente Orozco y han adornado la calle Madrid, en la del Carmen Coyoacán, por más de cien años. Aactualmente se encuentran en peligro debido a la construcción de un edificio en el predio Madrid 78."
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/conv-impi-2025.png?raw=true", 
+                title: "Premio IMPI a la Innovación Mexicana 2025",
+                description: "Inscrítbete al #PremioIMPI2025 y comparte tu innovación con el mundo, ¡Son 11 categorías y un premio de $250,000 MXN cada una! Apoya a las invenciones que tengan que ver con medio ambiente, agua, electricidad, salud, etc. Es su segundo año ",
+                ubicacion: "Registro en línea",
+                link: {
+                    url: "https://premioinnovacionmexicana.impi.gob.mx/", msg: "Para registrar tu evento y encontrar toda la información de la convocatoria haz click en el siguiente enlace ↓↓", extra: "Conoce el reconocimiento que impulsa el talento inventivo del país."
+                },
+                cierre: "2025-10-30",
+                details: "¡Es momento de transformar el futuro!"
+            },
+            {
+                image: "https://github.com/Ivan-Organista/flyers/blob/main/conv-climathon-mexico-2025.jpg?raw=true",
+                title: "Climaton México 2025",
+                description: "Es como una incubadora de tecnología e innovaciones para solucionar problemas del calentamiento global. Será como un tour de 7 ciudades en México, donde, durante dos días para cada ciudad, se reunirán todas esas ideas y recibirán asesoría y apoyo, habrán premios de $5,000 y $10,000 MXN",
+                ubicacion: "Tlanepantla; Guanajuato; Mérida; Campeche; Hermosillo; Saltillo; Monterrey",
+                link: {url: "https://mexicocity.impacthub.net/climathonsmx/",msg: "El evento para CDMX sucederá el 19 y 20 de septiembre, y la de Monterrey hasta el 7 y 8 de noviembre",extra: "Toda la información de la convocatoria en el enlace de arriba ↑↑"},
+                cierre: "2025-11-07",
+                details: "Ante el gran reto del cambio climático, sólo la acción colectiva—revolucionaria— podrá impulsar las soluciones que el planeta necesita."
+            }
+        ];
+
+        // --- Menu Interactivity ---
+        const inicioSection = document.getElementById('inicio-section');
+        const calendarContainer = document.querySelector('.calendar-container');
+        const eventosSection = document.getElementById('eventos-section');
+        const climaSection = document.getElementById('clima-section');
+        const socialBar = document.getElementById('social-bar');
+        const modalLink = document.getElementById('modal-link');
+        const modalLinkBtn = document.getElementById('modal-link-btn');
+        const modalLinkMsg = document.getElementById('modal-link-message');
+        const modalLinkExtra = document.getElementById('modal-link-extra');
+        const closeModalLink = document.getElementById('close-modal-link');
+
+        document.getElementById('inicioBtn').onclick = function(e) {
+            e.preventDefault();
+            inicioSection.style.display = '';
+            calendarContainer.style.display = 'none';
+            eventosSection.style.display = 'none';
+            climaSection.style.display = 'none';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            document.getElementById('contacto-section').style.display = 'none';
+        };
+        document.getElementById('calendarioBtn').onclick = function(e) {
+            e.preventDefault();
+            inicioSection.style.display = 'none';
+            calendarContainer.style.display = '';
+            eventosSection.style.display = 'none';
+            climaSection.style.display = 'none';
+            renderCalendar(currentMonth, currentYear);
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            document.getElementById('contacto-section').style.display = 'none';
+        };
+        document.getElementById('eventosBtn').onclick = function(e) {
+            e.preventDefault();
+            inicioSection.style.display = 'none';
+            calendarContainer.style.display = 'none';
+            eventosSection.style.display = '';
+            climaSection.style.display = 'none';
+            renderAllEvents();
+            window.scrollTo({top: eventosSection.offsetTop - 20, behavior: 'smooth'});
+            document.getElementById('contacto-section').style.display = 'none';
+        };
+        document.getElementById('climaBtn').onclick = function(e) {
+            e.preventDefault();
+            inicioSection.style.display = 'none';
+            calendarContainer.style.display = 'none';
+            eventosSection.style.display = 'none';
+            climaSection.style.display = '';
+            window.scrollTo({top: climaSection.offsetTop - 20, behavior: 'smooth'});
+            document.getElementById('contacto-section').style.display = 'none';
+        };
+        document.getElementById('contactoBtn').onclick = function(e) {
+            e.preventDefault();
+            inicioSection.style.display = 'none';
+            calendarContainer.style.display = 'none';
+            eventosSection.style.display = 'none';
+            climaSection.style.display = 'none';
+            document.getElementById('contacto-section').style.display = '';
+            window.scrollTo({top: document.getElementById('contacto-section').offsetTop - 20, behavior: 'smooth'});
+        };
+        // Show Inicio by default
+        inicioSection.style.display = '';
+        calendarContainer.style.display = 'none';
+        eventosSection.style.display = 'none';
+        climaSection.style.display = 'none';
+
+        // --- Modal logic ---
+        function showModalLink(linkObj, imageUrl) {
+            // Clear previous image if any
+            let imgHtml = '';
+            if (imageUrl) {
+                imgHtml = `
+                    <div style="text-align:center;margin-bottom:16px;">
+                        <img id="modal-link-img" src="${imageUrl}" alt="Imagen" style="max-width:100%;max-height:180px;border-radius:8px;box-shadow:0 2px 8px #0002;cursor:zoom-in;">
+                        <br>
+                        <a href="${imageUrl}" target="_blank" style="font-size:0.97em;display:inline-block;margin-top:6px;color:#4b2e83;text-decoration:underline;">Ver imagen en otra pestaña</a>
+                    </div>
+                `;
+            }
+            modalLinkMsg.innerHTML = imgHtml + (linkObj.msg || "Haz clic en el botón para acceder al enlace.");
+            modalLinkBtn.href = linkObj.url;
+            modalLinkExtra.textContent = linkObj.extra || "";
+            modalLink.style.display = "flex";
+
+            // Zoom functionality
+            const img = document.getElementById('modal-link-img');
+            if (img) {
+                let zoomed = false;
+                img.onclick = function() {
+                    zoomed = !zoomed;
+                    if (zoomed) {
+                        img.style.maxWidth = "95vw";
+                        img.style.maxHeight = "80vh";
+                        img.style.cursor = "zoom-out";
+                        img.style.zIndex = "3000";
+                        img.style.position = "relative";
+                        img.style.boxShadow = "0 8px 32px #0006";
+                    } else {
+                        img.style.maxWidth = "100%";
+                        img.style.maxHeight = "180px";
+                        img.style.cursor = "zoom-in";
+                        img.style.position = "";
+                        img.style.boxShadow = "0 2px 8px #0002";
+                    }
+                };
+            }
+        }
+        closeModalLink.onclick = function() {
+            modalLink.style.display = "none";
+        };
+        modalLink.onclick = function(e) {
+            if (e.target === modalLink) modalLink.style.display = "none";
+        };
+
+        // --- Convocatorias Render ---
+        function renderConvocatorias() {
+            const cont = document.getElementById('convocatorias-list');
+            if (!cont) return;
+            if (CONVOCATORIAS.length === 0) {
+                cont.innerHTML = "<p>No hay convocatorias activas.</p>";
+                return;
+            }
+            // Only show convocatorias whose cierre is today or in the future
+            const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+            const active = CONVOCATORIAS.filter(c => !c.cierre || c.cierre >= todayStr);
+            if (active.length === 0) {
+                cont.innerHTML = "<p>No hay convocatorias activas.</p>";
+                return;
+            }
+            cont.innerHTML = active.map(c => `
+                <div class="evento">
+                    ${c.image ? `<img class="evento-img" src="${c.image}" alt="Imagen convocatoria">` : `<div class="evento-noimg"><span>📢</span></div>`}
+                    <div class="evento-content">
+                        <div class="evento-title">${c.title}</div>
+                        <div class="evento-desc">${c.description}</div>
+                        <div class="evento-ubicacion"><b>Ubicación:</b> ${c.ubicacion || ''}</div>
+                        ${c.cierre ? `<div class="evento-duration"><b>Cierre:</b> ${c.cierre}</div>` : ''}
+                        ${c.link ? `<button class="evento-link" data-link='${JSON.stringify(c.link)}'>Ver más</button>` : ''}
+                        <div class="evento-details">${c.details || ''}</div>
+                    </div>
+                </div>
+            `).join('');
+            // Add modal link listeners
+            cont.querySelectorAll('.evento-link').forEach(btn => {
+                btn.onclick = function() {
+                    const linkObj = JSON.parse(btn.getAttribute('data-link'));
+                    const eventoDiv = btn.closest('.evento');
+                    let imgUrl = null;
+                    if (eventoDiv) {
+                        const imgTag = eventoDiv.querySelector('img.evento-img');
+                        if (imgTag) imgUrl = imgTag.src;
+                    }
+                    showModalLink(linkObj, imgUrl);
+                };
+            });
+        }
+
+        // --- Calendar and Events Logic ---
+        const monthYear = document.getElementById('monthYear');
+        const calendarDays = document.getElementById('calendarDays');
+        const calendarDates = document.getElementById('calendarDates');
+        const eventList = document.getElementById('eventList');
+        const allEventsList = document.getElementById('allEventsList');
+
+        const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        let today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+        let selectedDay = null;
+
+        // Get all closure dates for convocatorias
+        const cierreDates = CONVOCATORIAS.filter(c => c.cierre).map(c => c.cierre);
+
+        function pad(n) { return n < 10 ? '0' + n : n; }
+
+        function renderCalendar(month, year) {
+            // Header
+            const showDate = new Date(year, month, 1);
+            monthYear.textContent = `${showDate.toLocaleString('default', { month: 'long' })} ${year}`;
+            // Days
+            calendarDays.innerHTML = days.map(d => `<div class="calendar-day">${d}</div>`).join('');
+            // Dates
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            let datesHtml = '';
+            for (let i = 0; i < firstDay; i++) {
+                datesHtml += `<div></div>`;
+            }
+            for (let d = 1; d <= lastDate; d++) {
+                const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                const isSelected = selectedDay &&
+                    selectedDay.day === d &&
+                    selectedDay.month === month &&
+                    selectedDay.year === year;
+                const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
+                const hasEvent = EVENTS.some(ev => ev.date === dateStr);
+                const isCierre = cierreDates.includes(dateStr);
+                datesHtml += `<div 
+                    class="calendar-date${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}${hasEvent ? ' has-event' : ''}${isCierre ? ' cierre-event' : ''}" 
+                    data-date="${dateStr}" 
+                    tabindex="0"
+                    >${d}${isCierre ? ' <span title="Cierre de convocatoria" style="color:#e74c3c;font-size:1.2em;">★</span>' : ''}</div>`;
+            }
+            calendarDates.innerHTML = datesHtml;
+
+            // Add click listeners
+            document.querySelectorAll('.calendar-date').forEach(el => {
+                el.onclick = () => {
+                    const dateStr = el.getAttribute('data-date');
+                    const [y, m, d] = dateStr.split('-').map(Number);
+                    selectedDay = { year: y, month: m - 1, day: d };
+                    showEvents(dateStr);
+                    renderCalendar(currentMonth, currentYear);
+                };
+                el.onkeydown = (e) => {
+                    if (e.key === "Enter" || e.key === " ") el.click();
+                };
+            });
+        }
+
+        function showEvents(dateStr) {
+            const dayEvents = EVENTS.filter(ev => ev.date === dateStr);
+            // Also show convocatorias that close this day
+            const cierreCalls = CONVOCATORIAS.filter(c => c.cierre === dateStr);
+            eventList.innerHTML = '';
+            eventList.classList.remove('show');
+            let html = '';
+            if (dayEvents.length) {
+                html += `<h3>Eventos para ${dateStr}:</h3>` +
+                    dayEvents.map(ev => `
+                        <div class="evento">
+                            ${ev.image ? `<img class="evento-img" src="${ev.image}" alt="Imagen del evento">` : `<div class="evento-noimg"><span>📅</span></div>`}
+                            <div class="evento-content">
+                                <div class="evento-title">${ev.title}</div>
+                                <div class="evento-date"><b>Fecha:</b> ${ev.date}</div>
+                                <div class="evento-desc">${ev.description}</div>
+                                <div class="evento-duration"><b>Duración:</b> ${ev.duration}</div>
+                                <div class="evento-ubicacion"><b>Ubicación:</b> ${ev.ubicacion || ''}</div>
+                                ${ev.link ? `<button class="evento-link" data-link='${JSON.stringify(ev.link)}'>Acceder</button>` : ''}
+                                <div class="evento-details">${ev.details || ''}</div>
+                            </div>
+                        </div>
+                    `).join('');
+            }
+            if (cierreCalls.length) {
+                html += `<h3 style="color:#e74c3c;">Cierre de convocatorias:</h3>` +
+                    cierreCalls.map(c => `
+                        <div class="evento">
+                            ${c.image ? `<img class="evento-img" src="${c.image}" alt="Imagen convocatoria">` : `<div class="evento-noimg"><span>📢</span></div>`}
+                            <div class="evento-content">
+                                <div class="evento-title">${c.title}</div>
+                                <div class="evento-desc">${c.description}</div>
+                                <div class="evento-ubicacion"><b>Ubicación:</b> ${c.ubicacion || ''}</div>
+                                <div class="evento-duration"><b>Cierre:</b> ${c.cierre}</div>
+                                ${c.link ? `<button class="evento-link" data-link='${JSON.stringify(c.link)}'>Ver más</button>` : ''}
+                                <div class="evento-details">${c.details || ''}</div>
+                            </div>
+                        </div>
+                    `).join('');
+            }
+            if (!html) {
+                html = `<h3>No hay eventos para ${dateStr}.</h3>`;
+            }
+            eventList.innerHTML = html;
+            setTimeout(() => eventList.classList.add('show'), 10);
+
+            // Add modal link listeners
+            eventList.querySelectorAll('.evento-link').forEach(btn => {
+                btn.onclick = function() {
+                    const linkObj = JSON.parse(btn.getAttribute('data-link'));
+                    const eventoDiv = btn.closest('.evento');
+                    let imgUrl = null;
+                    if (eventoDiv) {
+                        const imgTag = eventoDiv.querySelector('img.evento-img');
+                        if (imgTag) imgUrl = imgTag.src;
+                    }
+                    showModalLink(linkObj, imgUrl);
+                };
+            });
+        }
+
+        document.getElementById('prevMonth').onclick = () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            selectedDay = null;
+            renderCalendar(currentMonth, currentYear);
+            eventList.innerHTML = '';
+            eventList.classList.remove('show');
+        };
+        document.getElementById('nextMonth').onclick = () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            selectedDay = null;
+            renderCalendar(currentMonth, currentYear);
+            eventList.innerHTML = '';
+            eventList.classList.remove('show');
+        };
+
+        // --- Render all events for "Eventos" section ---
+        function renderAllEvents() {
+            let all = [...EVENTS];
+            // Only show events whose date is today or in the future
+            const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+            all = all.filter(e => e.date && e.date >= todayStr);
+            all.sort((a, b) => a.date.localeCompare(b.date));
+            if (all.length === 0) {
+                allEventsList.innerHTML = "<p>No hay eventos registrados.</p>";
+                return;
+            }
+            allEventsList.innerHTML = all.map(ev => `
+                <div class="evento">
+                    ${ev.image ? `<img class="evento-img" src="${ev.image}" alt="Imagen del evento">` : `<div class="evento-noimg"><span>📅</span></div>`}
+                    <div class="evento-content">
+                        <div class="evento-title">${ev.title}</div>
+                        <div class="evento-date"><b>Fecha:</b> ${ev.date}</div>
+                        <div class="evento-desc">${ev.description || ''}</div>
+                        <div class="evento-duration"><b>Duración:</b> ${ev.duration || ''}</div>
+                        <div class="evento-ubicacion"><b>Ubicación:</b> ${ev.ubicacion || ''}</div>
+                        ${ev.link ? `<button class="evento-link" data-link='${JSON.stringify(ev.link)}'>Acceder</button>` : ''}
+                        <div class="evento-details">${ev.details || ''}</div>
+                    </div>
+                </div>
+            `).join('');
+            // Add modal link listeners
+            allEventsList.querySelectorAll('.evento-link').forEach(btn => {
+                btn.onclick = function() {
+                    const linkObj = JSON.parse(btn.getAttribute('data-link'));
+                    const eventoDiv = btn.closest('.evento');
+                    let imgUrl = null;
+                    if (eventoDiv) {
+                        const imgTag = eventoDiv.querySelector('img.evento-img');
+                        if (imgTag) imgUrl = imgTag.src;
+                    }
+                    showModalLink(linkObj, imgUrl);
+                };
+            });
+        }
+
+        // Initial render
+        renderConvocatorias();
+    });
+    </script>
+    <style>
+    .cierre-event {
+        border: 2px solid #e74c3c !important;
+        box-shadow: 0 0 0 2px #e74c3c33;
+        position: relative;
+    }
+    .cierre-event span[title] {
+        position: absolute;
+        right: 4px;
+        top: 2px;
+        pointer-events: none;
+    }
+    </style>
+<!-- Place this just before </body> -->
+<script src="https://climateclock.world/widget-v2.js" async></script>
+</body>
+</html>
