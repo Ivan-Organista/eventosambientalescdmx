@@ -656,7 +656,7 @@
         },
         {
             image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-jornada-de-reforestacion-2025-con-sist-agroforestales.jpg?raw=true",
-            date: "2025-08-15",
+            date: "2025-08-16",
             title: "Jornada de reforestación 2025 con sistemas agroforestales",
             description: "En Totláli seguimos reforestando con toda la energía que trae la lluvia… pero nos hacen falta manos y corazones. 🐝Así que buscamos a quienes quieran cuidar la vida, preservar especies nativas y crear comunidad con la naturaleza. ¿Te unes a la misión? ",
             duration: "5 horas (9:00 - 14:00)",
@@ -666,7 +666,7 @@
         },
         {
             image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-jornada-de-reforestacion-2025-con-sist-agroforestales.jpg?raw=true",
-            date: "2025-08-22",
+            date: "2025-08-23",
             title: "Jornada de reforestación 2025 con sistemas agroforestales",
             description: "En Totláli seguimos reforestando con toda la energía que trae la lluvia… pero nos hacen falta manos y corazones. 🐝Así que buscamos a quienes quieran cuidar la vida, preservar especies nativas y crear comunidad con la naturaleza. ¿Te unes a la misión? ",
             duration: "5 horas (9:00 - 14:00)",
@@ -676,13 +676,33 @@
         },
         {
             image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-jornada-de-reforestacion-2025-con-sist-agroforestales.jpg?raw=true",
-            date: "2025-08-29",
+            date: "2025-08-30",
             title: "Jornada de reforestación 2025 con sistemas agroforestales",
             description: "En Totláli seguimos reforestando con toda la energía que trae la lluvia… pero nos hacen falta manos y corazones. 🐝Así que buscamos a quienes quieran cuidar la vida, preservar especies nativas y crear comunidad con la naturaleza. ¿Te unes a la misión? ",
             duration: "5 horas (9:00 - 14:00)",
             ubicacion: "Jardín Etnobiológico Totláli, San Pablo Tejalpa en Zumpahuacán, Estado de México https://maps.app.goo.gl/wZPBFRZ2mQEpTZtN8",
             link: {url: "https://wa.me/message/QNSU754P6UPID1",msg: "Haz click en el siguiente enlace a WhatsApp para registrarte, o visita la página de IG @totlali_jeb",extra: "Y recuerda ayudarnos a compartir este mensaje para poder llegar a más personas. ¡Mil gracias!"},
             details: "Actividad para adultos y niños. Actividades gratuitas. Algunas actividades a realizar: Elaboración de bokashi, sustratos, camas elevadas, plantación y eliminiación de especies invasoras. Todas ellas con el propósito de hacer restauración forestal y conservar el patrimonio biocultural de la región."
+        },
+        {
+            image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-grupo-de-estudio-bioetica-y-bioarte.png?raw=true",
+            date: "2025-08-12",
+            title: "Grupo de Estudio: Bioética y bioarte",
+            description: "Realizaremos un análisis sobre la implicaciones bioéticas de éste género artístico contemporáneo que fusiona el arte con las ciencias biológicas.",
+            duration: "2 horas (20:00 - 22:00)",
+            ubicacion: "Vía Zoom. Requiere registro previo en https://www.bioeticayambiente.org/index.php?m=registro",
+            link: {url: "https://www.bioeticayambiente.org/",msg: "Las sesiones serán quincenales el día martes iniciando el 12 de Agosto",extra: "Constancia de 20 horas pagando suscripción mensual o anual."},
+            details: "Evento gratuito con registro previo."
+        },
+        {
+            image: "https://github.com/Ivan-Organista/flyers/blob/main/evento-grupo-de-estudio-bioetica-fungi.png?raw=true",
+            date: "2025-08-14",
+            title: "Grupo de Estudio: Bioética Fungi",
+            description: "Haremos un viaje por el Reino Fungi donde retomaremos el entramado micélico como una analogía para relacionarnos de manera cuidadosa y respetuosa con la naturaleza.",
+            duration: "2 horas (20:00 - 22:00)",
+            ubicacion: "Vía Zoom. Requiere registro previo en https://www.bioeticayambiente.org/index.php?m=registro",
+            link: {url: "https://www.bioeticayambiente.org/",msg: "Las sesiones serán quincenales el día jueves iniciando el 14 de Agosto",extra: "Constancia de 20 horas pagando suscripción mensual o anual."},
+            details: "Evento gratuito con registro previo."
         }
         ];
         // Edit/add events here! ,{image: null,date: "",title: "",description: "",duration: "",ubicacion: "",link: {url: "",msg: "",extra: ""},details: ""}
@@ -1138,7 +1158,54 @@
                 };
             });
         }
-
+        function renderConvocatorias() {
+            const cont = document.getElementById('convocatorias-list');
+            if (!cont) return;
+            if (CONVOCATORIAS.length === 0) {
+                cont.innerHTML = "<p>No hay convocatorias activas.</p>";
+                return;
+            }
+            // Only show convocatorias whose cierre is today or in the future
+            const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+            // Filter out closed
+            const active = CONVOCATORIAS.filter(c => !c.cierre || c.cierre >= todayStr);
+            // Order by cierre (soonest first, nulls last)
+            active.sort((a, b) => {
+                if (!a.cierre) return 1;
+                if (!b.cierre) return -1;
+                return a.cierre.localeCompare(b.cierre);
+            });
+            if (active.length === 0) {
+                cont.innerHTML = "<p>No hay convocatorias activas.</p>";
+                return;
+            }
+            cont.innerHTML = active.map(c => `
+                <div class="evento">
+                    ${c.image ? `<img class="evento-img" src="${c.image}" alt="Imagen convocatoria">` : `<div class="evento-noimg"><span>📢</span></div>`}
+                    <div class="evento-content">
+                        <div class="evento-title">${c.title}</div>
+                        <div class="evento-desc">${c.description}</div>
+                        <div class="evento-ubicacion"><b>Ubicación:</b> ${c.ubicacion || ''}</div>
+                        ${c.cierre ? `<div class="evento-duration"><b>Cierre:</b> ${c.cierre}</div>` : ''}
+                        ${c.link ? `<button class="evento-link" data-link='${JSON.stringify(c.link)}'>Ver más</button>` : ''}
+                        <div class="evento-details">${c.details || ''}</div>
+                    </div>
+                </div>
+            `).join('');
+            // Add modal link listeners
+            cont.querySelectorAll('.evento-link').forEach(btn => {
+                btn.onclick = function() {
+                    const linkObj = JSON.parse(btn.getAttribute('data-link'));
+                    const eventoDiv = btn.closest('.evento');
+                    let imgUrl = null;
+                    if (eventoDiv) {
+                        const imgTag = eventoDiv.querySelector('img.evento-img');
+                        if (imgTag) imgUrl = imgTag.src;
+                    }
+                    showModalLink(linkObj, imgUrl);
+                };
+            });
+        }
         // Initial render
         renderConvocatorias();
     });
